@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptViral — Prompts Vidéos IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --accent: #7c5cfc;
+    --accent2: #c084fc;
+    --accent3: #38bdf8;
+    --text: #f0eeff;
+    --text2: #9991bb;
+    --text3: #5a5478;
+    --border: rgba(124,92,252,0.15);
+    --border2: rgba(124,92,252,0.3);
+    --card: rgba(20,18,35,0.9);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1, .orb2 {
+    position: fixed; border-radius: 50%;
+    filter: blur(120px); pointer-events: none; z-index: 0;
+  }
+  .orb1 { width:500px;height:500px;background:rgba(124,92,252,0.12);top:-150px;right:-100px; }
+  .orb2 { width:400px;height:400px;background:rgba(56,189,248,0.07);bottom:0;left:-100px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(10,10,15,0.85);
+  }
+  .logo { font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-0.5px; }
+  .logo span { color: var(--accent); }
+  .logo-dot { display:inline-block;width:6px;height:6px;background:var(--accent2);border-radius:50%;margin-left:3px;vertical-align:middle; }
+  .header-badge { font-size:11px;padding:4px 10px;background:rgba(124,92,252,0.15);border:1px solid var(--border2);border-radius:99px;color:var(--accent2); }
+
+  .hero { position:relative;z-index:1;text-align:center;padding:5rem 2rem 3rem; }
+  .hero-eyebrow {
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--accent2);margin-bottom:1.5rem;padding:5px 14px;
+    border:1px solid rgba(192,132,252,0.3);border-radius:99px;
+    background:rgba(192,132,252,0.07);
+  }
+  .hero-eyebrow::before { content:'✦';font-size:9px; }
+  h1 {
+    font-family:'Syne',sans-serif;
+    font-size:clamp(2.2rem,6vw,4rem);
+    font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:1rem;
+  }
+  h1 em {
+    font-style:normal;
+    background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .hero-sub { font-size:16px;color:var(--text2);max-width:480px;margin:0 auto 2.5rem;line-height:1.7;font-weight:300; }
+
+  .search-wrap { max-width:520px;margin:0 auto;position:relative; }
+  .search-wrap input {
+    width:100%;padding:14px 20px 14px 48px;
+    background:var(--bg3);border:1px solid var(--border2);border-radius:14px;
+    color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .search-wrap input:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,92,252,0.15); }
+  .search-wrap input::placeholder { color:var(--text3); }
+  .search-icon { position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:18px; }
+
+  .stats { position:relative;z-index:1;display:flex;justify-content:center;gap:2rem;padding:2rem;flex-wrap:wrap; }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Syne',sans-serif;font-size:28px;font-weight:700;color:var(--text); }
+  .stat-num span { color:var(--accent2); }
+  .stat-lbl { font-size:12px;color:var(--text3);margin-top:2px;letter-spacing:0.5px; }
+  .stat-sep { width:1px;background:var(--border);align-self:stretch; }
+
+  .filters { position:relative;z-index:1;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 2rem 2rem; }
+  .filter-btn {
+    padding:7px 16px;border:1px solid var(--border);border-radius:99px;
+    background:transparent;color:var(--text2);font-size:13px;
+    font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;
+  }
+  .filter-btn:hover { border-color:var(--border2);color:var(--text); }
+  .filter-btn.active { background:rgba(124,92,252,0.15);border-color:var(--accent);color:var(--accent2); }
+
+  .grid {
+    position:relative;z-index:1;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:14px;padding:0 2rem 4rem;max-width:1200px;margin:0 auto;
+  }
+
+  /* CARD */
+  .card {
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    overflow:hidden;display:flex;flex-direction:column;
+    transition:border-color .2s,transform .2s;
+  }
+  .card:hover { border-color:var(--border2);transform:translateY(-3px); }
+
+  /* THUMBNAIL */
+  .card-thumb {
+    position:relative;width:100%;height:160px;overflow:hidden;background:var(--bg3);
+  }
+  .card-thumb img {
+    width:100%;height:100%;object-fit:cover;
+    transition:transform .4s ease;
+    display:block;
+  }
+  .card:hover .card-thumb img { transform:scale(1.06); }
+  .card-thumb-overlay {
+    position:absolute;inset:0;
+    background:linear-gradient(to bottom, transparent 40%, rgba(10,10,15,0.85) 100%);
+  }
+  .card-thumb-tool {
+    position:absolute;top:10px;right:10px;
+    font-size:10px;font-weight:600;letter-spacing:0.5px;
+    padding:3px 9px;border-radius:99px;
+    background:rgba(10,10,15,0.75);
+    border:1px solid rgba(255,255,255,0.12);
+    color:#fff;backdrop-filter:blur(6px);
+  }
+  .card-thumb-views {
+    position:absolute;bottom:10px;left:12px;
+    font-size:11px;color:rgba(255,255,255,0.7);
+    display:flex;align-items:center;gap:4px;
+  }
+
+  .card-body { padding:1rem 1.2rem;display:flex;flex-direction:column;gap:10px;flex:1; }
+  .card-top { display:flex;align-items:center;justify-content:space-between; }
+  .cat-badge { font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:99px;font-weight:500; }
+  .card-title { font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.3px; }
+  .card-prompt {
+    font-size:12px;color:var(--text2);line-height:1.65;
+    background:rgba(255,255,255,0.03);border:1px solid var(--border);
+    border-radius:10px;padding:9px 11px;
+    font-family:'Courier New',monospace;flex:1;
+  }
+  .card-footer { display:flex;align-items:center;justify-content:space-between;padding-top:4px; }
+  .tool-tag { display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text3); }
+  .tool-dot { width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0; }
+  .copy-btn {
+    display:flex;align-items:center;gap:6px;padding:6px 13px;
+    border:1px solid var(--border2);border-radius:8px;
+    background:rgba(124,92,252,0.08);color:var(--accent2);
+    font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;
+  }
+  .copy-btn:hover { background:rgba(124,92,252,0.2);border-color:var(--accent); }
+  .copy-btn.copied { background:rgba(56,189,248,0.1);border-color:rgba(56,189,248,0.4);color:var(--accent3); }
+
+  .empty { grid-column:1/-1;text-align:center;padding:3rem;color:var(--text3);font-size:15px; }
+
+  footer {
+    position:relative;z-index:1;text-align:center;padding:2rem;
+    border-top:1px solid var(--border);font-size:13px;color:var(--text3);
+  }
+  footer span { color:var(--accent2); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+  .card { animation:fadeUp .3s ease both; }
+
+  @media(max-width:600px){
+    header{padding:1rem;}
+    .hero{padding:3rem 1rem 2rem;}
+    .grid{padding:0 1rem 3rem;}
+    .filters{padding:0 1rem 1.5rem;}
+    .stats{gap:1.5rem;}
+    .stat-sep{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="orb1"></div>
+<div class="orb2"></div>
+
+<header>
+  <div class="logo">Prompt<span>Viral</span><span class="logo-dot"></span></div>
+  <div><span class="header-badge">✦ 100% Gratuit</span></div>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">Prompts Vidéos IA Virales</div>
+  <h1>Crée des vidéos<br><em>qui explosent</em></h1>
+  <p class="hero-sub">Collection curatée de prompts testés pour Sora, Runway, Kling et Pika. Copie, colle, publie.</p>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search" placeholder="Rechercher un prompt, un outil, une catégorie..." oninput="filterCards()">
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num" id="total-count">12<span>+</span></div><div class="stat-lbl">Prompts</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-num">5<span>+</span></div><div class="stat-lbl">Catégories</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-num">4</div><div class="stat-lbl">Outils IA</div></div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="setFilter('all',this)">Tout voir</button>
+  <button class="filter-btn" onclick="setFilter('cinematic',this)">🎬 Cinématique</button>
+  <button class="filter-btn" onclick="setFilter('nature',this)">🌿 Nature</button>
+  <button class="filter-btn" onclick="setFilter('character',this)">🧍 Personnage</button>
+  <button class="filter-btn" onclick="setFilter('urban',this)">🏙️ Urbain</button>
+  <button class="filter-btn" onclick="setFilter('abstract',this)">🌀 Abstrait</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<footer>Fait avec ✦ par <span>PromptViral</span> — 100% gratuit, hébergé sur GitHub Pages</footer>
+
+<script>
+const CAT = {
+  cinematic: { label:'Cinématique', bg:'rgba(56,189,248,0.12)',  color:'#38bdf8' },
+  nature:    { label:'Nature',      bg:'rgba(52,211,153,0.12)',  color:'#34d399' },
+  character: { label:'Personnage',  bg:'rgba(251,113,133,0.12)', color:'#fb7185' },
+  urban:     { label:'Urbain',      bg:'rgba(251,191,36,0.12)',  color:'#fbbf24' },
+  abstract:  { label:'Abstrait',    bg:'rgba(192,132,252,0.15)', color:'#c084fc' }
+};
+
+// Unsplash images — chaque prompt a sa propre image thématique
+const PROMPTS = [
+  { id:1,  cat:'cinematic', title:'Lever de soleil épique',    tool:'Sora',   views:'2.1M',
+    img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',
+    prompt:'A cinematic drone shot slowly rising above dense morning fog to reveal a golden sunrise over endless mountains, 4K, epic orchestral mood, ultra slow motion' },
+  { id:2,  cat:'nature',    title:'Cascade magique',           tool:'Runway', views:'1.8M',
+    img:'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=600&q=80',
+    prompt:'A mystical waterfall in a glowing forest at night, bioluminescent plants, fireflies swirling, moonlight rays, hyper realistic, dreamlike atmosphere' },
+  { id:3,  cat:'character', title:'Danseuse flamboyante',      tool:'Kling',  views:'3.4M',
+    img:'https://images.unsplash.com/photo-1518834107812-67b0b7c58434?w=600&q=80',
+    prompt:'A beautiful dancer spinning in slow motion, her dress made of fire and embers, black background, sparks flying, cinematic lighting, 8K resolution' },
+  { id:4,  cat:'urban',     title:'Tokyo nocturne',            tool:'Sora',   views:'900K',
+    img:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80',
+    prompt:'Low angle tracking shot through neon-lit Tokyo streets at 3am, rain-soaked pavement reflecting lights, sparse pedestrians, cyberpunk aesthetic, slow push forward' },
+  { id:5,  cat:'abstract',  title:'Univers liquide',           tool:'Pika',   views:'1.2M',
+    img:'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=600&q=80',
+    prompt:'Abstract liquid metal morphing into galaxy shapes, deep space background, iridescent colors, ultra smooth slow motion, no text, mesmerizing loop' },
+  { id:6,  cat:'cinematic', title:'Chute libre infinie',       tool:'Runway', views:'2.7M',
+    img:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80',
+    prompt:'POV freefall from stratosphere, clouds rushing past, earth visible below, speed lines, dramatic wind sounds implied, ultra realistic, IMAX quality' },
+  { id:7,  cat:'nature',    title:'Aurore boréale',            tool:'Sora',   views:'4.1M',
+    img:'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&q=80',
+    prompt:'Timelapse of northern lights dancing over a frozen lake in Iceland, reflections in ice, stars visible, breathtaking colors, 4K, 60fps, wide angle' },
+  { id:8,  cat:'character', title:'Samouraï dans la brume',    tool:'Kling',  views:'1.5M',
+    img:'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80',
+    prompt:'A lone samurai standing still in thick fog, cherry blossom petals falling slowly, dramatic silence, cinematic black and white with soft pink tones, epic composition' },
+  { id:9,  cat:'urban',     title:'Café parisien animé',       tool:'Pika',   views:'600K',
+    img:'https://images.unsplash.com/photo-1499125562588-29fb8a56b5d5?w=600&q=80',
+    prompt:'Cozy Parisian café corner at golden hour, steam rising from coffee cups, people chatting blurred in background, warm bokeh lights, romantic shallow depth of field' },
+  { id:10, cat:'abstract',  title:'Explosion de couleurs',     tool:'Runway', views:'3.8M',
+    img:'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=600&q=80',
+    prompt:'High speed macro shot of paint explosions in slow motion, vivid colors colliding mid-air, black background, hyper detailed droplets' },
+  { id:11, cat:'cinematic', title:'Galaxie en formation',      tool:'Sora',   views:'2.2M',
+    img:'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=600&q=80',
+    prompt:'Cinematic zoom out from a single star to reveal a full spiral galaxy forming, cosmic dust swirling, deep space, orchestral build-up implied, 8K' },
+  { id:12, cat:'nature',    title:'Forêt enchantée',           tool:'Kling',  views:'1.1M',
+    img:'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&q=80',
+    prompt:'Walking through an ancient enchanted forest, giant glowing mushrooms, soft purple light filtering through canopy, tiny fairies visible in distance, magical realism' }
+];
+
+let currentFilter = 'all';
+
+function setFilter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterCards();
+}
+
+function filterCards() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = PROMPTS.filter(p => {
+    const matchCat = currentFilter === 'all' || p.cat === currentFilter;
+    const matchSearch = !q || p.title.toLowerCase().includes(q) || p.prompt.toLowerCase().includes(q) || p.tool.toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
+  document.getElementById('total-count').textContent = filtered.length;
+  renderGrid(filtered);
+}
+
+function renderGrid(list) {
+  const g = document.getElementById('grid');
+  if (!list.length) {
+    g.innerHTML = '<div class="empty">Aucun prompt trouvé. Essaie une autre recherche.</div>';
+    return;
+  }
+  g.innerHTML = list.map((p, i) => {
+    const s = CAT[p.cat];
+    return `<div class="card" style="animation-delay:${i*0.04}s">
+      <div class="card-thumb">
+        <img src="${p.img}" alt="${p.title}" loading="lazy">
+        <div class="card-thumb-overlay"></div>
+        <span class="card-thumb-tool">${p.tool}</span>
+        <span class="card-thumb-views">🔥 ${p.views} vues</span>
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <span class="cat-badge" style="background:${s.bg};color:${s.color}">${s.label}</span>
+        </div>
+        <div class="card-title">${p.title}</div>
+        <div class="card-prompt">${p.prompt}</div>
+        <div class="card-footer">
+          <span class="tool-tag"><span class="tool-dot"></span>${p.tool}</span>
+          <button class="copy-btn" onclick="copyPrompt(this,'${p.prompt.replace(/'/g,"\\'")}')">⧉ Copier</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function copyPrompt(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copié !';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⧉ Copier'; }, 2000);
+  });
+}
+
+renderGrid(PROMPTS);
+</script>
+</body>
+</html>
